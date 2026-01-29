@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LuxVista Installer Calculator</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LuxVista Installer">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --lux-primary:#0f3d3e;
+      --lux-accent:#c9a24d;
+      --lux-bg:#f2f4f3;
+    }
+    body {
+      margin:0;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background:var(--lux-bg);
+    }
+    #splash {
+      position:fixed;
+      inset:0;
+      background:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    }
+    #splash img {
+      width:180px;
+      height:auto;
+    }
+    #app {
+      display:none;
+    }
+    .app {
+      max-width:768px;
+      margin:auto;
+      padding:16px;
+    }
+    .header {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 16px 20px;
+    }
+    .brand h1 {
+      margin:0;
+      font-size:1.4rem;
+      color:var(--lux-primary);
+    }
+    .brand span {
+      font-size:.8rem;
+      color:#555;
+    }
+    .card {
+      background:#fff;
+      border-radius:18px;
+      padding:20px;
+      box-shadow:0 10px 28px rgba(0,0,0,.08);
+      margin-bottom:16px;
+    }
+    label {
+      font-weight:600;
+      margin-top:14px;
+      display:block;
+      font-size:.9rem;
+    }
+    input {
+      width:100%;
+      padding:14px;
+      font-size:1.1rem;
+      border-radius:12px;
+      border:1px solid #d1d1d6;
+      margin-top:6px;
+    }
+    .result-row {
+      display:flex;
+      justify-content:space-between;
+      padding:10px 0;
+      font-size:1.05rem;
+    }
+    .total {
+      font-size:1.5rem;
+      font-weight:700;
+      color:var(--lux-primary);
+      border-top:1px solid #eee;
+      margin-top:10px;
+      padding-top:14px;
+    }
+    button {
+      width:100%;
+      padding:14px;
+      font-size:1.1rem;
+      border-radius:14px;
+      border:none;
+      background:var(--lux-primary);
+      color:#fff;
+      font-weight:600;
+    }
+    .footer {
+      text-align:center;
+      font-size:.75rem;
+      color:#777;
+      margin-top:12px;
+    }
+  </style>
+  <script type="application/ld+json">{
+    "name": "LuxVista Installer",
+    "short_name": "LuxVista",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#0f3d3e"
+  }</script>
+</head>
+<body>
+
+  <!-- Splash Screen -->
+  <div id="splash">
+    <img src="08CE506F-8071-46B7-918C-4A158C045141.png" alt="LuxVista Logo">
+  </div>
+
+  <!-- App -->
+  <div id="app">
+    <div class="app">
+      <div class="header">
+        <img src="08CE506F-8071-46B7-918C-4A158C045141.png" alt="LuxVista Logo" style="width:56px;height:auto;">
+        <div class="brand">
+          <h1>LuxVista</h1>
+          <span>Installer Margin Calculator</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Our Cost ($)</label>
+        <input id="ourCost" type="number" step="0.01" />
+
+        <label>Installation ($)</label>
+        <input id="install" type="number" step="0.01" />
+
+        <label>GST (%)</label>
+        <input id="gst" type="number" value="10" />
+      </div>
+
+      <div class="card">
+        <div class="result-row"><span>Retailer Cost</span><strong>$<span id="retailerCost">0.00</span></strong></div>
+        <div class="result-row"><span>Sub Total</span><strong>$<span id="subTotal">0.00</span></strong></div>
+        <div class="result-row"><span>GST</span><strong>$<span id="gstAmount">0.00</span></strong></div>
+        <div class="result-row total"><span>Total</span><span>$<span id="total">0.00</span></span></div>
+      </div>
+
+      <div class="card">
+        <button onclick="resetJob()">New Job</button>
+      </div>
+
+      <div class="footer">LuxVista · Installer App · v1.0 · Offline Ready</div>
+    </div>
+  </div>
+
+  <script>
+    const FIXED_MARGIN = 25;
+
+    const ourCostInput = document.getElementById('ourCost');
+    const installInput = document.getElementById('install');
+    const gstInput = document.getElementById('gst');
+
+    const retailerCostSpan = document.getElementById('retailerCost');
+    const subTotalSpan = document.getElementById('subTotal');
+    const gstAmountSpan = document.getElementById('gstAmount');
+    const totalSpan = document.getElementById('total');
+
+    [ourCostInput, installInput, gstInput].forEach(i => i.addEventListener('input', calculate));
+
+    function calculate() {
+      const ourCost = parseFloat(ourCostInput.value) || 0;
+      const install = parseFloat(installInput.value) || 0;
+      const gstRate = parseFloat(gstInput.value) || 0;
+
+      const retailerCost = ourCost / (1 - FIXED_MARGIN / 100);
+      const subTotal = retailerCost + install;
+      const gstAmount = subTotal * gstRate / 100;
+      const total = subTotal + gstAmount;
+
+      retailerCostSpan.innerText = retailerCost.toFixed(2);
+      subTotalSpan.innerText = subTotal.toFixed(2);
+      gstAmountSpan.innerText = gstAmount.toFixed(2);
+      totalSpan.innerText = total.toFixed(2);
+    }
+
+    function resetJob() {
+      ourCostInput.value = '';
+      installInput.value = '';
+      gstInput.value = '10';
+      calculate();
+    }
+
+    // Splash handling
+    setTimeout(() => {
+      document.getElementById('splash').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }, 1200);
+  </script>
+</body>
+</html>
